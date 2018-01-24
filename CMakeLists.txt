@@ -47,7 +47,7 @@ ELSE(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 
 ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 
-target_link_libraries(openni2-net-stream-server openni2-net-stream-common)
+target_link_libraries(openni2-net-stream-server openni2-net-stream-common OpenNI2)
 
 ######################################################################################################################
 ## CLIENT
