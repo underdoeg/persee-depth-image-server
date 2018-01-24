@@ -4,21 +4,34 @@
 
 #include <chrono>
 
+//#include <pcl/compression/organized_pointcloud_conversion.h>
+
 #include "openni2-net-client.h"
 
 boost::asio::io_service OpenNI2NetClient::ioService;
 
 OpenNI2NetClient::OpenNI2NetClient(unsigned int p):port(p) {
+	cloud = Cloud::Ptr(new Cloud());
 	start();
 }
 
 OpenNI2NetClient::~OpenNI2NetClient() {
+	stop();
+}
+
+
+void OpenNI2NetClient::stop() {
 	bKeepRunning = false;
 	if(thread.joinable()) thread.join();
 }
 
-void OpenNI2NetClient::setCallback(const OpenNI2NetClient::CallbackCv &callback) {
+
+void OpenNI2NetClient::setCallbackCv(const OpenNI2NetClient::CallbackCv &callback) {
 	callbackCv = callback;
+}
+
+void OpenNI2NetClient::setCallbackPcl(const OpenNI2NetClient::CallbackPcl &callback) {
+	callbackPcl = callback;
 }
 
 void OpenNI2NetClient::start() {
@@ -79,6 +92,51 @@ void OpenNI2NetClient::start() {
 			}
 
 			if(callbackCv) callbackCv(mat);
+			if(callbackPcl){
+
+				const uint16_t* depthMap = reinterpret_cast<const uint16_t*>(mat.data);
+
+				cloud->width = header.width;
+				cloud->height = header.height;
+				cloud->is_dense = false;
+				cloud->points.resize(cloud->height * cloud->width);
+
+
+				float fx = header.fov / float(OpenNI2FloatConversion); // Horizontal focal length
+				float fy = fx; // Vertcal focal length
+				float cx = ((float)cloud->width - 1.f) / 2.f;  // Center x
+				float cy = ((float)cloud->height - 1.f) / 2.f; // Center y
+
+				float fx_inv = 1.0f / fx;
+				float fy_inv = 1.0f / fy;
+
+				int depth_idx = 0;
+				float bad_point = std::numeric_limits<float>::quiet_NaN ();
+
+				for (int v = 0; v < cloud->height; ++v)
+				{
+					for (int u = 0; u < cloud->width; ++u, ++depth_idx)
+					{
+						pcl::PointXYZ& pt = cloud->points[depth_idx];
+						/// @todo Different values for these cases
+						// Check for invalid measurements
+						if (depthMap[depth_idx] == 0){
+//							depthMap[depth_idx] == depth_image->getNoSampleValue () ||
+//							depthMap[depth_idx] == depth_image->getShadowValue ())
+							pt.x = pt.y = pt.z = bad_point;
+						}
+						else{
+							pt.z = depthMap[depth_idx] * 0.001f; // millimeters to meters
+							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
+							pt.y = (static_cast<float> (v) - cy) * pt.z * fy_inv;
+						}
+					}
+				}
+				cloud->sensor_origin_.setZero ();
+				cloud->sensor_orientation_.setIdentity ();
+
+				callbackPcl(cloud);
+			}
 
 			auto finish = std::chrono::high_resolution_clock::now();
 
@@ -95,3 +153,5 @@ void OpenNI2NetClient::start() {
 float OpenNI2NetClient::getFps() {
 	return fps / 1000.f;
 }
+
+

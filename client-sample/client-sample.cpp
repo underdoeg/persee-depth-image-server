@@ -11,7 +11,7 @@ int main(int argc, char** argv){
 	std::atomic_bool bNewMat;
 	bNewMat = false;
 
-	client.setCallback([&](const cv::Mat& in){
+	client.setCallbackCv([&](const cv::Mat &in) {
 		mtx.lock();
 		in.copyTo(matThread);
 		mtx.unlock();

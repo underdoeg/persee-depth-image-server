@@ -11,7 +11,6 @@ find_package(OpenCV 3 REQUIRED )
 
 find_package(Boost 1.4 REQUIRED system)
 
-
 ## check if system is ARM, if so app is compiled on persee and needs the included openni2 libs
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     message("--Using OpenNI2 libraries from the libs folder")
@@ -53,15 +52,32 @@ add_executable(openni2-net-stream-server server/server.cpp server/grabber.cpp se
 
 target_link_libraries(openni2-net-stream-server openni2-net-stream-common OpenNI2)
 
+###################################################################################################################
 
-######################################################################################################################
-## CLIENT
-add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
-target_include_directories(openni2-net-stream-client PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/client)
-target_link_libraries(openni2-net-stream-client openni2-net-stream-common)
+find_package(PCL 1.7)
+
+if(PCL_FOUND)
+
+    link_directories(${PCL_LIBRARY_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
+
+    ######################################################################################################################
+    ## CLIENT
+    add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
+    target_include_directories(openni2-net-stream-client PUBLIC ${PCL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/client)
+    target_link_libraries(openni2-net-stream-client PUBLIC openni2-net-stream-common ${PCL_LIBRARIES})
 
 
-######################################################################################################################
-## CLIENT SAMPLE
-add_executable(openni2-net-stream-client-sample client-sample/client-sample.cpp)
-target_link_libraries(openni2-net-stream-client-sample openni2-net-stream-client)
+    ######################################################################################################################
+    ## CLIENT SAMPLE
+    add_executable(openni2-net-stream-client-sample client-sample/client-sample.cpp)
+    target_link_libraries(openni2-net-stream-client-sample openni2-net-stream-client)
+
+    ######################################################################################################################
+    ## CLIENT SAMPLE PCL
+    add_executable(openni2-net-stream-client-sample-pcl client-sample-pcl/client-sample-pcl.cpp)
+    target_link_libraries(openni2-net-stream-client-sample-pcl openni2-net-stream-client)
+
+else(PCL_FOUND)
+    message("-- PCL not found on this computer, will only build the server application")
+endif(PCL_FOUND)

@@ -2,6 +2,8 @@
 #include <mutex>
 #include <atomic>
 
+#include <boost/cast.hpp>
+
 #include <opencv/cv.hpp>
 
 #include <openni2-net-common.h>
@@ -17,7 +19,7 @@ int main(int argc, char** argv) {
 	bool compressed = true;
 	int compressionQuality = 90;
 
-	LOGI << "optional usage ./openni2-net-stream-server [host] [port] [use compression (0 or 1, on by default)]";
+	LOGI << "optional usage ./openni2-net-stream-server [host] [port] [use compression (0 or 1, on by default)] ";
 
 	if(argc > 1){
 		host = argv[1];
@@ -55,6 +57,7 @@ int main(int argc, char** argv) {
 
 		bNewMat = true;
 
+		sender.setFov(grabber.getFov());
 		sender.send(depthMat);
 	});
 

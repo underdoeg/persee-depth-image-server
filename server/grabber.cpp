@@ -2,8 +2,11 @@
 // Created by phwhitfield on 1/19/18.
 //
 
+#include <boost/cast.hpp>
+
 #include <OniCTypes.h>
 #include "grabber.h"
+#include <cmath>
 
 Grabber::Grabber() {
 }
@@ -60,6 +63,10 @@ void Grabber::start() {
 void Grabber::onNewFrame(openni::VideoStream &in) {
 	if(!callback) return;
 
+	int frameWidth = stream.getVideoMode().getResolutionX();
+	float hFov = stream.getHorizontalFieldOfView();
+	fov =  boost::numeric_cast<OpenNI2SizeType>(frameWidth / (2.0f * std::tan(hFov / 2.0f)) * OpenNI2FloatConversion);
+
 	openni::VideoFrameRef ref;
 	in.readFrame(&ref);
 
@@ -76,4 +83,8 @@ int Grabber::getWidth() {
 
 int Grabber::getHeight() {
 	return stream.getVideoMode().getResolutionY();
+}
+
+OpenNI2SizeType Grabber::getFov() {
+	return fov;
 }

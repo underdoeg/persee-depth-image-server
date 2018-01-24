@@ -52,6 +52,7 @@ Sender::Sender(const std::string &h, unsigned p) :
 							sizeSent,
 							boost::numeric_cast<OpenNI2SizeType>(matToSend.cols),
 							boost::numeric_cast<OpenNI2SizeType>(matToSend.rows),
+							fov,
 							0
 					};
 					socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
@@ -73,6 +74,7 @@ Sender::Sender(const std::string &h, unsigned p) :
 							sizeSent,
 							boost::numeric_cast<OpenNI2SizeType>(matToSend.cols),
 							boost::numeric_cast<OpenNI2SizeType>(matToSend.rows),
+							fov,
 							1
 					};
 					socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
@@ -139,5 +141,10 @@ void Sender::setCompressed(bool state) {
 
 void Sender::setCompressionQuality(int quality) {
 	compressionQuality = quality;
+}
+
+void Sender::setFov(OpenNI2SizeType f) {
+	std::lock_guard<std::mutex> lk(cvMtx);
+	fov = f;
 }
 
