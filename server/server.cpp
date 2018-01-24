@@ -15,9 +15,9 @@ int main(int argc, char** argv) {
 	std::string host = "127.0.0.1";
 	auto port = OpenNI2ServerDefaultPort;
 
-	if(argc > 2){
+	if(argc > 1){
 		host = argv[1];
-		if(argc > 3)
+		if(argc > 2)
 			port = std::atoi(argv[2]);
 	}else{
 		LOGI << "optional usage ./openni2-net-stream-server host port";
