@@ -10,11 +10,16 @@ Sender::Sender(const std::string &h, unsigned p) :
 		socket(ioService), host(h), port(p) {
 	bConnected = false;
 	bKeepRunning = true;
+	bUseCompression = false;
+	compressionQuality = 90;
 
 	LOGI << "Starting streaming to " << host << ":" << port;
 
 	thread = std::thread([&] {
 		unsigned connectCounter = 0;
+		unsigned statsCounter = 0;
+
+		std::vector<uint8_t> compressed;
 
 		while (bKeepRunning) {
 
@@ -37,16 +42,50 @@ Sender::Sender(const std::string &h, unsigned p) :
 					continue;
 				}
 
-				// data size
-				OpenNI2NetHeader header = {
-						boost::numeric_cast<OpenNI2SizeType>(dataToSend.total() * dataToSend.elemSize()),
-						boost::numeric_cast<OpenNI2SizeType>(dataToSend.cols),
-						boost::numeric_cast<OpenNI2SizeType>(dataToSend.rows)
-				};
-				socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
+				OpenNI2SizeType sizeSent = 0;
 
-				// send actual data
-				socket.send(boost::asio::buffer(dataToSend.data, header.size));
+				if(!bUseCompression){
+					sizeSent = boost::numeric_cast<OpenNI2SizeType>(matToSend.total() * matToSend.elemSize());
+
+					// data size
+					OpenNI2NetHeader header = {
+							sizeSent,
+							boost::numeric_cast<OpenNI2SizeType>(matToSend.cols),
+							boost::numeric_cast<OpenNI2SizeType>(matToSend.rows),
+							0
+					};
+					socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
+
+					// send actual data
+					socket.send(boost::asio::buffer(matToSend.data, sizeSent));
+				}else{
+
+					compressed.clear();
+
+					std::vector<int> param(2);
+					param[0] = cv::IMWRITE_JPEG_QUALITY;
+					param[1] = compressionQuality;
+					cv::imencode(".tif", matToSend, compressed, param);
+
+					sizeSent = boost::numeric_cast<OpenNI2SizeType>(compressed.size());
+
+					OpenNI2NetHeader header = {
+							sizeSent,
+							boost::numeric_cast<OpenNI2SizeType>(matToSend.cols),
+							boost::numeric_cast<OpenNI2SizeType>(matToSend.rows),
+							1
+					};
+					socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
+
+					// send actual data
+					socket.send(boost::asio::buffer(compressed.data(), sizeSent));
+				}
+
+				if(statsCounter % 50 == 0){
+					LOGI << "Sent " << sizeSent / 1000 << "kb";
+				}
+				statsCounter++;
+
 				//LOGI << "Sending " << header.size / 1000 << "kb";
 			} catch (std::exception &e) {
 				LOGW << "Client disconnected: " << e.what() << std::endl;
@@ -85,12 +124,20 @@ bool Sender::connect() {
 void Sender::send(const cv::Mat &mat) {
 	{
 		std::lock_guard<std::mutex> lk(cvMtx);
-		mat.copyTo(dataToSend);
+		mat.copyTo(matToSend);
 	}
 	cv.notify_all();
 }
 
 bool Sender::isConnected() {
 	return bConnected;
+}
+
+void Sender::setCompressed(bool state) {
+	bUseCompression = state;
+}
+
+void Sender::setCompressionQuality(int quality) {
+	compressionQuality = quality;
 }
 

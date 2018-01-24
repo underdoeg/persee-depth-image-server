@@ -11,8 +11,10 @@
 using OpenNI2SizeType = uint32_t;
 static const unsigned OpenNI2ServerDefaultPort = 3344;
 
+
 struct OpenNI2NetHeader{
 	OpenNI2SizeType size;
 	OpenNI2SizeType width;
 	OpenNI2SizeType height;
+	uint8_t jpeg;
 };

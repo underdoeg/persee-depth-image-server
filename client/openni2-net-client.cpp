@@ -67,9 +67,17 @@ void OpenNI2NetClient::start() {
 			}
 
 			cv::Mat mat(header.height, header.width, CV_16UC1);
-			memcpy(mat.data, buffer.data(), buffer.size());
+
+			if(header.jpeg == 0) {
+				memcpy(mat.data, buffer.data(), buffer.size());
+			}else{
+				cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
+			}
 
 			if(callbackCv) callbackCv(mat);
 		}
+
+		acceptor.close();
+		socket.close();
 	});
 }

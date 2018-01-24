@@ -17,13 +17,15 @@ class Sender {
 
 	std::condition_variable cv;
 	std::mutex cvMtx;
-	cv::Mat dataToSend;
+	cv::Mat matToSend;
 	std::thread thread;
 	std::atomic_bool bKeepRunning;
 
 	boost::asio::io_service ioService;
 	tcp::socket socket;
 	std::atomic_bool bConnected;
+	std::atomic_bool bUseCompression;
+	std::atomic_int compressionQuality;
 
 	std::string host;
 	unsigned port;
@@ -38,4 +40,6 @@ public:
 	void send(const cv::Mat& mat);
 
 	bool isConnected();
+	void setCompressed(bool state=true);
+	void setCompressionQuality(int quality);
 };
