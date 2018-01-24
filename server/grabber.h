@@ -5,7 +5,7 @@
 
 #include <OpenNI.h>
 
-#include <common.h>
+#include <openni2-net-common.h>
 
 class Grabber: public openni::VideoStream::NewFrameListener{
 

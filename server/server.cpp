@@ -4,7 +4,7 @@
 
 #include <opencv/cv.hpp>
 
-#include <common.h>
+#include <openni2-net-common.h>
 
 #include "grabber.h"
 
@@ -12,12 +12,21 @@
 
 int main(int argc, char** argv) {
 
-	LOGI << "START OPENNI2 SERVER";
+	std::string host = "127.0.0.1";
+	auto port = OpenNI2ServerDefaultPort;
+
+	if(argc == 3){
+		host = argv[1];
+		port = std::atoi(argv[2]);
+	}else{
+		LOGI << "optional usage ./openni2-net-stream-server host port";
+	}
 
 	Grabber grabber;
-	Sender sender("127.0.0.1", OpenNI2ServerDefaultPort);
+	Sender sender(host, port);
 
-	cv::namedWindow("win", cv::WINDOW_NORMAL);
+	const std::string windowName = "OpenNI2 Net Server";
+	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
 
 	cv::Mat matThread, mat;
 	std::mutex mtx;
@@ -30,18 +39,17 @@ int main(int argc, char** argv) {
 //		params.push_back(CV_IMWRITE_JPEG_QUALITY);
 //		params.push_back(80);
 
-
 		cv::Mat depthMat(h, w, CV_16UC1);
 		auto size = depthMat.step[0] * depthMat.rows;
 		memcpy(depthMat.data, pixels, size);
 
 		mtx.lock();
-		matThread = depthMat.clone();
+		depthMat.copyTo(matThread);
 		mtx.unlock();
 
 		bNewMat = true;
 
-		sender.send(size, reinterpret_cast<const uint8_t*>(pixels));
+		sender.send(depthMat);
 	});
 
 	grabber.start();
@@ -51,7 +59,7 @@ int main(int argc, char** argv) {
 			mtx.lock();
 			matThread.convertTo(mat, CV_8U, 255.f / 3000.f);
 			mtx.unlock();
-			cv::imshow("win", mat);
+			cv::imshow(windowName, mat);
 			bNewMat = false;
 		}
 	}

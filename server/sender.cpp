@@ -11,27 +11,47 @@ Sender::Sender(const std::string &h, unsigned p) :
 	bConnected = false;
 	bKeepRunning = true;
 
+	LOGI << "Starting streaming to " << host << ":" << port;
+
 	thread = std::thread([&] {
+		unsigned connectCounter = 0;
+
 		while (bKeepRunning) {
 
 			if (!bConnected) {
 				if (!connect()) {
-					LOGW << "Cannot connect to server " << host << ":" << port << " -> will not send data";
+					if(connectCounter % 50 == 0) {
+						LOGW << "Cannot connect to server " << host << ":" << port << " -> will keep retrying";
+					}
+					connectCounter++;
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 					continue;
 				}
 			}
 
-			// wait for data
-			std::unique_lock<std::mutex> l(cvMtx);
-			if (cv.wait_for(l, std::chrono::seconds(1)) == std::cv_status::timeout) {
-				LOGI << "NOPE";
-				continue;
-			}
 
-			auto size = boost::numeric_cast<OpenNI2SizeType>(dataToSend.size());
-			socket.send(boost::asio::buffer(&size, sizeof(OpenNI2SizeType)));
-			socket.send(boost::asio::buffer(dataToSend.data(), dataToSend.size()));
+			try {
+				// wait for data
+				std::unique_lock<std::mutex> l(cvMtx);
+				if (cv.wait_for(l, std::chrono::seconds(1)) == std::cv_status::timeout) {
+					continue;
+				}
+
+				// data size
+				OpenNI2NetHeader header = {
+						boost::numeric_cast<OpenNI2SizeType>(dataToSend.total() * dataToSend.elemSize()),
+						boost::numeric_cast<OpenNI2SizeType>(dataToSend.cols),
+						boost::numeric_cast<OpenNI2SizeType>(dataToSend.rows)
+				};
+				socket.send(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)));
+
+				// send actual data
+				socket.send(boost::asio::buffer(dataToSend.data, header.size));
+				//LOGI << "Sending " << header.size / 1000 << "kb";
+			} catch (std::exception &e) {
+				LOGW << "Client disconnected: " << e.what() << std::endl;
+				bConnected = false;
+			}
 		}
 	});
 }
@@ -54,7 +74,7 @@ bool Sender::connect() {
 
 		bConnected = true;
 	} catch (std::exception &e) {
-		LOGW << "Exception: " << e.what() << std::endl;
+		//LOGW << "Exception: " << e.what() << std::endl;
 		bConnected = false;
 	}
 
@@ -62,11 +82,10 @@ bool Sender::connect() {
 }
 
 
-void Sender::send(size_t size, const uint8_t *data) {
+void Sender::send(const cv::Mat &mat) {
 	{
 		std::lock_guard<std::mutex> lk(cvMtx);
-		dataToSend.resize(size);
-		memcpy(dataToSend.data(), data, size);
+		mat.copyTo(dataToSend);
 	}
 	cv.notify_all();
 }

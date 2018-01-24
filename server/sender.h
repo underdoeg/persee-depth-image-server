@@ -7,7 +7,9 @@
 
 #include <boost/asio.hpp>
 
-#include <common.h>
+#include <opencv/cv.hpp>
+
+#include <openni2-net-common.h>
 
 using boost::asio::ip::tcp;
 
@@ -15,7 +17,7 @@ class Sender {
 
 	std::condition_variable cv;
 	std::mutex cvMtx;
-	std::vector<uint8_t> dataToSend;
+	cv::Mat dataToSend;
 	std::thread thread;
 	std::atomic_bool bKeepRunning;
 
@@ -33,7 +35,7 @@ public:
 
 	~Sender();
 
-	void send(size_t size, const uint8_t *data);
+	void send(const cv::Mat& mat);
 
 	bool isConnected();
 };

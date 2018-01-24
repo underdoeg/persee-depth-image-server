@@ -42,9 +42,10 @@ ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-add_library(openni2-net-stream-common common/common.cpp common/common.h common/loguru.hpp)
+add_library(openni2-net-stream-common common/openni2-net-common.cpp common/openni2-net-common.h common/loguru.hpp)
 target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${CMAKE_CURRENT_SOURCE_DIR}/common)
 target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl)
+
 
 ######################################################################################################################
 ## SERVER
@@ -52,6 +53,15 @@ add_executable(openni2-net-stream-server server/server.cpp server/grabber.cpp se
 
 target_link_libraries(openni2-net-stream-server openni2-net-stream-common OpenNI2)
 
+
 ######################################################################################################################
 ## CLIENT
-add_library(openni2-net-stream-client client/client.cpp client/client.h)
+add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
+target_include_directories(openni2-net-stream-client PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/client)
+target_link_libraries(openni2-net-stream-client openni2-net-stream-common)
+
+
+######################################################################################################################
+## CLIENT SAMPLE
+add_executable(openni2-net-stream-client-sample client-sample/client-sample.cpp)
+target_link_libraries(openni2-net-stream-client-sample openni2-net-stream-client)

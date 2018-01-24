@@ -51,8 +51,6 @@ void Grabber::start() {
 
 	stream.addNewFrameListener(this);
 
-	LOGI << stream.getVideoMode().getResolutionX();
-
 	// start openni device
 	stream.start();
 }
