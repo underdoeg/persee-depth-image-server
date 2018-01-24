@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Orbbec Camera
+Comment=Orbbec Camera for astro
+Icon=blueman
+Exec=/home/ubuntu/orbbecAPI_rev1.0/orbbecintegratesimple_rev1.0/Platfo
+rm/Linux(ARM)/orbbecinteragesimple_rev1.0
+Terminal=false
+Type=Application
+StartupNotify=true

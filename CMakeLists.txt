@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 3.5)
+project(openni2-net-stream-server)
+
+# add modules path
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gstreamer)
+
+set(CMAKE_CXX_STANDARD 14)
+
+find_package(OpenCV 3 REQUIRED )
+
+find_package(Boost 1.4 REQUIRED system)
+
+######################################################################################################################
+## COMMON
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+add_library(openni2-net-stream-common common/common.cpp common/common.h common/loguru.hpp)
+target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${CMAKE_CURRENT_SOURCE_DIR}/common)
+target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl)
+
+######################################################################################################################
+## SERVER
+add_executable(openni2-net-stream-server server/server.cpp server/grabber.cpp server/grabber.h server/sender.cpp server/sender.h)
+
+## check if system is ARM, if so app is compiled on persee and needs the included openni2 libs
+IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    message("--Using OpenNI2 libraries from the libs folder")
+
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openNI2/include)
+    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/openNI2/lib)
+
+    set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/openNI2/lib)
+    message(${CMAKE_PREFIX_PATH})
+
+    find_library(OPENNI2_LIB OpenNI2 PATHS ${CMAKE_CURRENT_SOURCE_DIR}/libs/openNI2/lib)
+    message("-- OpenNI2 lib found: " ${OPENNI2_LIB})
+
+ELSE(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    message("-- Using System OpenNI2 libraries")
+    find_package(OpenNI2)
+
+    target_include_directories(openni2-net-stream-server PRIVATE ${OPENNI2_INCLUDE_DIRS})
+    target_link_libraries(openni2-net-stream-server ${OPENNI2_LIBRARIES})
+
+ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+
+target_link_libraries(openni2-net-stream-server openni2-net-stream-common)
+
+######################################################################################################################
+## CLIENT
+add_library(openni2-net-stream-client client/client.cpp client/client.h)
