@@ -18,6 +18,9 @@ int main(int argc, char** argv){
 		bNewMat = true;
 	});
 
+
+	unsigned fpsCounter = 0;
+
 	while(cv::waitKey(10) != 27){
 		if(bNewMat) {
 			mtx.lock();
@@ -25,6 +28,10 @@ int main(int argc, char** argv){
 			mtx.unlock();
 			cv::imshow("win", mat);
 			bNewMat = false;
+
+			if(fpsCounter % 30 == 0)
+				LOGI << "FPS " << client.getFps();
+			fpsCounter++;
 		}
 	}
 

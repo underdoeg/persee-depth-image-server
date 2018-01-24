@@ -2,6 +2,8 @@
 // Created by phwhitfield on 1/24/18.
 //
 
+#include <chrono>
+
 #include "openni2-net-client.h"
 
 boost::asio::io_service OpenNI2NetClient::ioService;
@@ -34,16 +36,18 @@ void OpenNI2NetClient::start() {
 		int counter = 0;
 
 		std::vector<uint8_t> buffer;
+		OpenNI2NetHeader header;
+		boost::system::error_code error;
 
 		while(bKeepRunning){
 
-			OpenNI2NetHeader header;
-
-			boost::system::error_code error;
+			auto start = std::chrono::high_resolution_clock::now();
 
 			auto amt = socket.read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), error);
 
-			if(amt == 0) continue;
+			if(amt == 0){
+
+			};
 
 			buffer.clear();
 			buffer.reserve(header.size);
@@ -75,9 +79,19 @@ void OpenNI2NetClient::start() {
 			}
 
 			if(callbackCv) callbackCv(mat);
+
+			auto finish = std::chrono::high_resolution_clock::now();
+
+			std::chrono::duration<double> elapsed = finish - start;
+
+			fps = (1.f / elapsed.count()) * 1000;
 		}
 
 		acceptor.close();
 		socket.close();
 	});
+}
+
+float OpenNI2NetClient::getFps() {
+	return fps / 1000.f;
 }

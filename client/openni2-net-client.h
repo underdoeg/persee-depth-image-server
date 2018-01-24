@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <thread>
+#include <atomic>
 
 #include <boost/asio.hpp>
 
@@ -22,6 +23,8 @@ private:
 
 	CallbackCv callbackCv;
 
+	std::atomic_int64_t fps;
+
 	void start();
 
 public:
@@ -29,4 +32,6 @@ public:
 	~OpenNI2NetClient();
 
 	void setCallback(const CallbackCv& callback);
+
+	float getFps();
 };
