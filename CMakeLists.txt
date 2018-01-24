@@ -11,19 +11,6 @@ find_package(OpenCV 3 REQUIRED )
 
 find_package(Boost 1.4 REQUIRED system)
 
-######################################################################################################################
-## COMMON
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-add_library(openni2-net-stream-common common/common.cpp common/common.h common/loguru.hpp)
-target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${CMAKE_CURRENT_SOURCE_DIR}/common)
-target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl)
-
-######################################################################################################################
-## SERVER
-add_executable(openni2-net-stream-server server/server.cpp server/grabber.cpp server/grabber.h server/sender.cpp server/sender.h)
 
 ## check if system is ARM, if so app is compiled on persee and needs the included openni2 libs
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
@@ -37,15 +24,31 @@ IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 
     find_library(OPENNI2_LIB OpenNI2 PATHS ${CMAKE_CURRENT_SOURCE_DIR}/libs/openNI2/lib)
     message("-- OpenNI2 lib found: " ${OPENNI2_LIB})
+    #target_link_libraries (openni2-net-stream-server OpenNI2)
 
 ELSE(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     message("-- Using System OpenNI2 libraries")
     find_package(OpenNI2)
 
-    target_include_directories(openni2-net-stream-server PRIVATE ${OPENNI2_INCLUDE_DIRS})
-    target_link_libraries(openni2-net-stream-server ${OPENNI2_LIBRARIES})
+    include_directories(${OPENNI2_INCLUDE_DIRS})
+    link_libraries(${OPENNI2_LIBRARIES})
 
 ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+
+
+######################################################################################################################
+## COMMON
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+add_library(openni2-net-stream-common common/common.cpp common/common.h common/loguru.hpp)
+target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${CMAKE_CURRENT_SOURCE_DIR}/common)
+target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl)
+
+######################################################################################################################
+## SERVER
+add_executable(openni2-net-stream-server server/server.cpp server/grabber.cpp server/grabber.h server/sender.cpp server/sender.h)
 
 target_link_libraries(openni2-net-stream-server openni2-net-stream-common OpenNI2)
 

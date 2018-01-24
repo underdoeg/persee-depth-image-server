@@ -16,7 +16,7 @@ Sender::Sender(const std::string &h, unsigned p) :
 
 			if (!bConnected) {
 				if (!connect()) {
-					LOGE << "Cannot connect to server " << host << ":" << port << " -> will not send data";
+					LOGW << "Cannot connect to server " << host << ":" << port << " -> will not send data";
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 					continue;
 				}
@@ -54,7 +54,7 @@ bool Sender::connect() {
 
 		bConnected = true;
 	} catch (std::exception &e) {
-		LOGE << "Exception: " << e.what() << std::endl;
+		LOGW << "Exception: " << e.what() << std::endl;
 		bConnected = false;
 	}
 
