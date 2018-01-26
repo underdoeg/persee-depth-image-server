@@ -3,6 +3,7 @@
 //
 
 #include <chrono>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 //#include <pcl/compression/organized_pointcloud_conversion.h>
 
@@ -21,6 +22,7 @@ OpenNI2NetClient::~OpenNI2NetClient() {
 
 
 void OpenNI2NetClient::stop() {
+	LOGI << "Stop Openni Listener on port " << port;
 	bKeepRunning = false;
 	if(thread.joinable()) thread.join();
 }
@@ -34,7 +36,11 @@ void OpenNI2NetClient::setCallbackPcl(const OpenNI2NetClient::CallbackPcl &callb
 	callbackPcl = callback;
 }
 
+
+
 void OpenNI2NetClient::start() {
+	LOGI << "Listening for openni data on port " << port;
+
 	thread = std::thread([&]{
 
 		using boost::asio::ip::tcp;
@@ -58,9 +64,7 @@ void OpenNI2NetClient::start() {
 
 			auto amt = socket.read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), error);
 
-			if(amt == 0){
-
-			};
+			if(amt == 0){continue;};
 
 			buffer.clear();
 			buffer.reserve(header.size);
