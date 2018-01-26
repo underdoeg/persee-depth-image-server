@@ -1,6 +1,8 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
 
+#include <mutex>
+
 #include <openni2-net-client.h>
 
 int main(int argc, char** argv){
