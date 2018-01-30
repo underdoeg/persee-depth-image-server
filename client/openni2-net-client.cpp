@@ -39,16 +39,35 @@ void OpenNI2NetClient::setCallbackPcl(const OpenNI2NetClient::CallbackPcl &callb
 
 
 void OpenNI2NetClient::start() {
-	LOGI << "Listening for openni data on port " << port;
+
+	if(thread.joinable())
+		thread.detach();
 
 	thread = std::thread([&]{
 
+		bKeepRunning = true;
+
 		using boost::asio::ip::tcp;
 
-		bKeepRunning = true;
+		std::condition_variable cv;
+		std::mutex cvMutex;
+
+		std::unique_lock<std::mutex> lk(cvMutex);
+
+
 		tcp::socket socket(ioService);
 		tcp::acceptor acceptor(ioService, tcp::endpoint(tcp::v4(), port));
-		acceptor.accept(socket);
+		acceptor.async_accept(socket, [&](const boost::system::error_code& ec_){
+			cv.notify_all();
+		});
+
+		if (cv.wait_for(lk, std::chrono::seconds(5)) == std::cv_status::timeout) {
+			LOGI << "Timeout openni client on port: " << port;
+			acceptor.cancel();
+			start();
+			return;
+		}
+		LOGI << "Listening for openni data on port " << port;
 
 		size_t bufferSize = 0;
 
@@ -58,11 +77,29 @@ void OpenNI2NetClient::start() {
 		OpenNI2NetHeader header;
 		boost::system::error_code error;
 
-		while(bKeepRunning){
+		//
 
+
+		while(bKeepRunning){
 			auto start = std::chrono::high_resolution_clock::now();
 
+			//size_t amt = 0;
+
 			auto amt = socket.read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), error);
+//			socket.async_read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), [&](const boost::system::error_code& ec_, size_t _amt){
+//				amt = _amt;
+//				cv.notify_all();
+//			});
+//
+//			if(cv.wait_for(lk, std::chrono::seconds(1)) == std::cv_status::no_timeout){
+//				LOGI << "GOT DATA";
+//			}else{
+//				LOGI << "Read timeout openni client on port: " << port;
+//				socket.cancel();
+//				continue;
+//			}
+//			LOGI << "LEAVE";
+
 
 			if(amt == 0){continue;};
 
