@@ -1,4 +1,7 @@
+#include <mutex>
+
 #include <openni2-net-client.h>
+
 
 int main(int argc, char** argv){
 
