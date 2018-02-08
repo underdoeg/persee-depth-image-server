@@ -5,8 +5,8 @@ project(openni2-net-stream-server)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gstreamer)
 
-include(FindPkgConfig)
-pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
+#include(FindPkgConfig)
+#pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 
