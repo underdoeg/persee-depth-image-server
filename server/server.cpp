@@ -10,7 +10,9 @@
 
 #include "grabber.h"
 
-#include "sender.h"
+#include "senderAsio.h"
+
+//#include "senderGstreamer.h"
 
 int main(int argc, char** argv) {
 
@@ -33,7 +35,10 @@ int main(int argc, char** argv) {
 	}
 
 	Grabber grabber;
-	Sender sender(host, port);
+
+	//SenderGstreamer sender(host, port);
+
+	SenderAsio sender(host, port);
 	sender.setCompressed(compressed);
 	sender.setCompressionQuality(compressionQuality);
 
