@@ -64,6 +64,7 @@ if(PCL_FOUND)
     ######################################################################################################################
     ## CLIENT
     add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
+    add_definitions(${PCL_DEFINITIONS})
     target_include_directories(openni2-net-stream-client PUBLIC ${PCL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/client)
     target_link_libraries(openni2-net-stream-client PUBLIC openni2-net-stream-common ${PCL_LIBRARIES})
 
