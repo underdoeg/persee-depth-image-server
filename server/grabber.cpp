@@ -77,8 +77,6 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 	const int height = ref.getHeight();
 	auto pixels = static_cast<const openni::DepthPixel*>(ref.getData());
 
-	openni::CoordinateConverter::convertDepthToWorld()
-
 	callback(pixels, width, height);
 }
 

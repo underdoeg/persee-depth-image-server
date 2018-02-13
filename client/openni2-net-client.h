@@ -21,12 +21,16 @@ public:
 	using CallbackCv = std::function<void(const cv::Mat&)>;
 	using CallbackPcl = std::function<void(const Cloud::ConstPtr&)>;
 
-	static boost::asio::io_service ioService;
+	//static boost::asio::io_service ioService;
+	//static bool ioServiceRunning;
 
 private:
 	std::thread thread;
 	std::atomic_bool bKeepRunning;
 	unsigned port;
+	std::shared_ptr<boost::asio::io_service> ioService;
+	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
+	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 
 	CallbackCv callbackCv;
 	CallbackPcl callbackPcl;

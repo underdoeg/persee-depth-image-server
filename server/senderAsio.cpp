@@ -4,9 +4,9 @@
 
 #include <boost/cast.hpp>
 
-#include "sender.h"
+#include "senderAsio.h"
 
-Sender::Sender(const std::string &h, unsigned p) :
+SenderAsio::SenderAsio(const std::string &h, unsigned p) :
 		socket(ioService), host(h), port(p) {
 	bConnected = false;
 	bKeepRunning = true;
@@ -67,7 +67,7 @@ Sender::Sender(const std::string &h, unsigned p) :
 					std::vector<int> param(2);
 					param[0] = cv::IMWRITE_JPEG_QUALITY;
 					param[1] = compressionQuality;
-					cv::imencode(".tif", matToSend, compressed, param);
+					cv::imencode(".png", matToSend, compressed, param);
 
 					sizeSent = boost::numeric_cast<OpenNI2SizeType>(compressed.size());
 
@@ -99,14 +99,14 @@ Sender::Sender(const std::string &h, unsigned p) :
 	});
 }
 
-Sender::~Sender() {
+SenderAsio::~SenderAsio() {
 	bKeepRunning = false;
 	if (thread.joinable()) {
 		thread.join();
 	}
 }
 
-bool Sender::connect() {
+bool SenderAsio::connect() {
 	try {
 		tcp::resolver resolver(ioService);
 
@@ -125,7 +125,7 @@ bool Sender::connect() {
 }
 
 
-void Sender::send(const cv::Mat &mat) {
+void SenderAsio::send(const cv::Mat &mat) {
 	{
 		std::lock_guard<std::mutex> lk(cvMtx);
 		mat.copyTo(matToSend);
@@ -133,19 +133,19 @@ void Sender::send(const cv::Mat &mat) {
 	cv.notify_all();
 }
 
-bool Sender::isConnected() {
+bool SenderAsio::isConnected() {
 	return bConnected;
 }
 
-void Sender::setCompressed(bool state) {
+void SenderAsio::setCompressed(bool state) {
 	bUseCompression = state;
 }
 
-void Sender::setCompressionQuality(int quality) {
+void SenderAsio::setCompressionQuality(int quality) {
 	compressionQuality = quality;
 }
 
-void Sender::setFov(OpenNI2SizeType fx, OpenNI2SizeType fy) {
+void SenderAsio::setFov(OpenNI2SizeType fx, OpenNI2SizeType fy) {
 	std::lock_guard<std::mutex> lk(cvMtx);
 	fovx = fx;
 	fovy = fy;
