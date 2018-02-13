@@ -106,8 +106,8 @@ void OpenNI2NetClient::start() {
 				cloud->points.resize(cloud->height * cloud->width);
 
 
-				float fx = header.fov / float(OpenNI2FloatConversion); // Horizontal focal length
-				float fy = fx; // Vertcal focal length
+				float fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
+				float fy = header.fovy / float(OpenNI2FloatConversion); // Vertcal focal length
 				float cx = ((float)cloud->width - 1.f) / 2.f;  // Center x
 				float cy = ((float)cloud->height - 1.f) / 2.f; // Center y
 

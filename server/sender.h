@@ -27,7 +27,7 @@ class Sender {
 	std::atomic_bool bUseCompression;
 	std::atomic_int compressionQuality;
 
-	OpenNI2SizeType fov;
+	OpenNI2SizeType fovx, fovy;
 
 	std::string host;
 	unsigned port;
@@ -44,5 +44,5 @@ public:
 	bool isConnected();
 	void setCompressed(bool state=true);
 	void setCompressionQuality(int quality);
-	void setFov(OpenNI2SizeType fov);
+	void setFov(OpenNI2SizeType fx, OpenNI2SizeType fy);
 };

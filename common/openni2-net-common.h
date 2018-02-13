@@ -17,6 +17,7 @@ struct OpenNI2NetHeader{
 	OpenNI2SizeType size;
 	OpenNI2SizeType width;
 	OpenNI2SizeType height;
-	OpenNI2SizeType fov;
+	OpenNI2SizeType fovx;
+	OpenNI2SizeType fovy;
 	uint8_t jpeg;
 };

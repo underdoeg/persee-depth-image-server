@@ -16,7 +16,7 @@ class Grabber: public openni::VideoStream::NewFrameListener{
 
 	Callback callback;
 
-	OpenNI2SizeType fov;
+	OpenNI2SizeType fovy, fovx;
 
 public:
 	Grabber();
@@ -28,7 +28,8 @@ public:
 	void setCallback(const Callback& c);
 	void start();
 
-	OpenNI2SizeType getFov();
+	OpenNI2SizeType getFovX();
+	OpenNI2SizeType getFovY();
 
 private:
 	void onNewFrame(openni::VideoStream& in) override;

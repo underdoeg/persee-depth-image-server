@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv){
 
-	OpenNI2NetClient client;
+	OpenNI2NetClient client(3346);
 
 	cv::namedWindow("win", cv::WINDOW_AUTOSIZE);
 

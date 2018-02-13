@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 
 		bNewMat = true;
 
-		sender.setFov(grabber.getFov());
+		sender.setFov(grabber.getFovX());
 		sender.send(depthMat);
 	});
 

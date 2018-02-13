@@ -63,9 +63,12 @@ void Grabber::start() {
 void Grabber::onNewFrame(openni::VideoStream &in) {
 	if(!callback) return;
 
-	int frameWidth = stream.getVideoMode().getResolutionX();
+	float frameWidth = stream.getVideoMode().getResolutionX();
+	float frameHeight = stream.getVideoMode().getResolutionY();
 	float hFov = stream.getHorizontalFieldOfView();
-	fov =  boost::numeric_cast<OpenNI2SizeType>(frameWidth / (2.0f * std::tan(hFov / 2.0f)) * OpenNI2FloatConversion);
+	float wFov = stream.getVerticalFieldOfView();
+	fovx =  boost::numeric_cast<OpenNI2SizeType>(frameWidth / (2.0f * std::tan(wFov / 2.0f)) * OpenNI2FloatConversion);
+	fovy =  boost::numeric_cast<OpenNI2SizeType>(frameHeight / (2.0f * std::tan(hFov / 2.0f)) * OpenNI2FloatConversion);
 
 	openni::VideoFrameRef ref;
 	in.readFrame(&ref);
@@ -73,6 +76,8 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 	const int width = ref.getWidth();
 	const int height = ref.getHeight();
 	auto pixels = static_cast<const openni::DepthPixel*>(ref.getData());
+
+	openni::CoordinateConverter::convertDepthToWorld()
 
 	callback(pixels, width, height);
 }
@@ -85,6 +90,10 @@ int Grabber::getHeight() {
 	return stream.getVideoMode().getResolutionY();
 }
 
-OpenNI2SizeType Grabber::getFov() {
-	return fov;
+OpenNI2SizeType Grabber::getFovX() {
+	return fovx;
+}
+
+OpenNI2SizeType Grabber::getFovY() {
+	return fovy;
 }
