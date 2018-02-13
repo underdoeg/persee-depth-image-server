@@ -3,6 +3,7 @@
 #include <functional>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #include <boost/asio.hpp>
 
@@ -38,6 +39,14 @@ private:
 
 	std::atomic_int64_t fps;
 
+	std::mutex mtx;
+
+	float fx = 0;
+	float fy = 0;
+
+	int width = 0;
+	int height = 0;
+
 	void start();
 
 public:
@@ -48,6 +57,13 @@ public:
 	void setCallbackPcl(const CallbackPcl &callback);
 
 	void stop();
+
+	float getFovX();
+	float getFovY();
+
+	int getWidth();
+	int getHeight();
+
 
 	float getFps();
 };

@@ -146,6 +146,16 @@ void OpenNI2NetClient::start() {
 				continue;
 			}
 
+			mtx.lock();
+			fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
+			fy = header.fovx / float(OpenNI2FloatConversion); // Vertcal focal length
+			float ffx = fx;
+			float ffy = fy;
+
+			width = header.width;
+			height = header.height;
+			mtx.unlock();
+
 			cv::Mat mat(header.height, header.width, CV_16UC1);
 
 			if (header.jpeg == 0) {
@@ -164,15 +174,11 @@ void OpenNI2NetClient::start() {
 				cloud->is_dense = false;
 				cloud->points.resize(cloud->height * cloud->width);
 
-
-				float fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
-				float fy = header.fovy / float(OpenNI2FloatConversion); // Vertcal focal length
 				float cx = ((float)cloud->width - 1.f) / 2.f;  // Center x
 				float cy = ((float)cloud->height - 1.f) / 2.f; // Center y
 
-
-				float fx_inv = 1.0f / fx;
-				float fy_inv = 1.0f / fy;
+				float fx_inv = 1.0f / ffx;
+				float fy_inv = 1.0f / ffy;
 
 				int depth_idx = 0;
 				float bad_point = std::numeric_limits<float>::quiet_NaN();
@@ -189,7 +195,7 @@ void OpenNI2NetClient::start() {
 						} else {
 							pt.z = depthMap[depth_idx] * 0.001f; // millimeters to meters
 							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
-							pt.y = (static_cast<float> (v) - cy) * pt.z * fy_inv;
+							pt.y = (static_cast<float> (v) - cy) * pt.z * fx_inv;
 						}
 					}
 				}
@@ -217,6 +223,26 @@ void OpenNI2NetClient::start() {
 
 float OpenNI2NetClient::getFps() {
 	return fps / 1000.f;
+}
+
+float OpenNI2NetClient::getFovX() {
+	std::lock_guard<std::mutex> lock(mtx);
+	return fx;
+}
+
+float OpenNI2NetClient::getFovY() {
+	std::lock_guard<std::mutex> lock(mtx);
+	return fy;
+}
+
+int OpenNI2NetClient::getWidth() {
+	std::lock_guard<std::mutex> lock(mtx);
+	return width;
+}
+
+int OpenNI2NetClient::getHeight() {
+	std::lock_guard<std::mutex> lock(mtx);
+	return height;
 }
 
 
