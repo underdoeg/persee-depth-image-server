@@ -148,7 +148,7 @@ void OpenNI2NetClient::start() {
 
 			mtx.lock();
 			fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
-			fy = header.fovx / float(OpenNI2FloatConversion); // Vertcal focal length
+			fy = header.fovy / float(OpenNI2FloatConversion); // Vertcal focal length
 			float ffx = fx;
 			float ffy = fy;
 

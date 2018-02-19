@@ -67,8 +67,8 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 	float frameHeight = stream.getVideoMode().getResolutionY();
 	float hFov = stream.getHorizontalFieldOfView();
 	float wFov = stream.getVerticalFieldOfView();
-	fovx =  boost::numeric_cast<OpenNI2SizeType>(frameWidth / (2.0f * std::tan(wFov / 2.0f)) * OpenNI2FloatConversion);
-	fovy =  boost::numeric_cast<OpenNI2SizeType>(frameHeight / (2.0f * std::tan(hFov / 2.0f)) * OpenNI2FloatConversion);
+	fovx = boost::numeric_cast<OpenNI2SizeType>(wFov*OpenNI2FloatConversion); //frameWidth / (2.0f * std::tan(wFov / 2.0f)) * OpenNI2FloatConversion);
+	fovy = boost::numeric_cast<OpenNI2SizeType>(hFov*OpenNI2FloatConversion); //frameHeight / (2.0f * std::tan(wFov / 2.0f)) * OpenNI2FloatConversion);
 
 	openni::VideoFrameRef ref;
 	in.readFrame(&ref);

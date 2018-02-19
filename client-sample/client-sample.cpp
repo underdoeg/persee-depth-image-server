@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv){
 
-	OpenNI2NetClient client(3346);
+	OpenNI2NetClient client(3345);
 
 	cv::namedWindow("win", cv::WINDOW_AUTOSIZE);
 
@@ -27,13 +27,15 @@ int main(int argc, char** argv){
 	while(cv::waitKey(10) != 27){
 		if(bNewMat) {
 			mtx.lock();
-			matThread.convertTo(mat, CV_8U, 255.f / 3000.f);
+			matThread.convertTo(mat, CV_8U, 255.f / 6000.f);
 			mtx.unlock();
 			cv::imshow("win", mat);
 			bNewMat = false;
 
-			if(fpsCounter % 30 == 0)
+			if(fpsCounter % 30 == 0) {
 				LOGI << "FPS " << client.getFps();
+				LOGI << "FOV " << client.getFovX() << "/" << client.getFovY();
+			}
 			fpsCounter++;
 		}
 	}
