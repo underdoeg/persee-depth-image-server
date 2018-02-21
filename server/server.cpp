@@ -12,6 +12,7 @@
 
 #include "senderAsio.h"
 
+#include <pcl/visualization/cloud_viewer.h>
 //#include "senderGstreamer.h"
 
 int main(int argc, char** argv) {
@@ -65,6 +66,28 @@ int main(int argc, char** argv) {
 		sender.setFov(grabber.getFovX(), grabber.getFovY());
 		sender.send(depthMat);
 	});
+
+/*
+	Grabber::Cloud::Ptr cloud = Grabber::Cloud::Ptr(new Grabber::Cloud());
+	std::atomic_bool bNewPcl;
+
+	grabber.setCallbackPcl([&](auto c){
+		mtx.lock();
+		*cloud = *c;
+		mtx.unlock();
+		bNewPcl = true;
+	});
+
+	pcl::visualization::PCLVisualizer viewer("OpenNI2 Stream client Server");
+	viewer.addPointCloud<Grabber::Point>(cloud, "cloud", 0);
+	while (!viewer.wasStopped ()) {
+		if(bNewPcl){
+			viewer.updatePointCloud<Grabber::Point>(cloud, "cloud");
+			bNewPcl = false;
+		}
+		viewer.spinOnce();
+	}
+*/
 
 	grabber.start();
 

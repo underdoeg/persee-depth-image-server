@@ -167,15 +167,24 @@ void OpenNI2NetClient::start() {
 			if (callbackCv) callbackCv(mat);
 			if (callbackPcl) {
 
+
+
 				const uint16_t *depthMap = reinterpret_cast<const uint16_t *>(mat.data);
 
-				cloud->width = header.width;
-				cloud->height = header.height;
-				cloud->is_dense = false;
-				cloud->points.resize(cloud->height * cloud->width);
+				if(mat.step)
 
-				float cx = ((float)cloud->width - 1.f) / 2.f;  // Center x
-				float cy = ((float)cloud->height - 1.f) / 2.f; // Center y
+				//cloud->width = header.width;
+				//cloud->height = header.height;
+				cloud->is_dense = false;
+				cloud->points.resize(header.height * header.width);
+
+				float cx = cloud->width  / 2.f;  // Center x
+				float cy = cloud->height / 2.f; // Center y
+
+				ffx = 2.f * std::tan(ffy / 2.f);
+				ffy = 2.f * std::tan(ffx / 2.f);
+
+				//ffx = 365;
 
 				float fx_inv = 1.0f / ffx;
 				float fy_inv = 1.0f / ffy;
@@ -183,9 +192,10 @@ void OpenNI2NetClient::start() {
 				int depth_idx = 0;
 				float bad_point = std::numeric_limits<float>::quiet_NaN();
 
-				for (int v = 0; v < cloud->height; ++v) {
-					for (int u = 0; u < cloud->width; ++u, ++depth_idx) {
+				for (int v = 0; v < header.height; ++v) {
+					for (int u = 0; u < header.width; ++u, ++depth_idx) {
 						pcl::PointXYZ &pt = cloud->points[depth_idx];
+						auto depth = float(mat.at<uint16_t>(depth_idx));
 						/// @todo Different values for these cases
 						// Check for invalid measurements
 						if (depthMap[depth_idx] == 0) {
@@ -193,14 +203,25 @@ void OpenNI2NetClient::start() {
 //							depthMap[depth_idx] == depth_image->getShadowValue ())
 							pt.x = pt.y = pt.z = bad_point;
 						} else {
-							pt.z = depthMap[depth_idx] * 0.001f; // millimeters to meters
-							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
-							pt.y = (static_cast<float> (v) - cy) * pt.z * fx_inv;
+//							pt.z = depthMap[depth_idx] * 0.001f; // millimeters to meters
+//							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
+//							pt.y = (static_cast<float> (v) - cy) * pt.z * fy_inv;
+
+							float normX = u / float(header.width) - .5f;
+							float normY = v / float(header.height) - .5f;
+
+							pt.z = depth * .001f;
+							pt.x = normX * depth * ffx * .001f;
+							pt.y = normY * depth * ffy * .001f;
+
+//							pt.z = depthMap[depth_idx] * .001f;
+//							pt.x = (u - cx) * pt.z * fx_inv ;
+//							pt.y = (v - cy) * pt.z * fx_inv;
 						}
 					}
 				}
-				cloud->sensor_origin_.setZero();
-				cloud->sensor_orientation_.setIdentity();
+				//cloud->sensor_origin_.setZero();
+				//cloud->sensor_orientation_.setIdentity();
 
 				callbackPcl(cloud);
 			}

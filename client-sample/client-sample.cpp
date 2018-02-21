@@ -27,7 +27,7 @@ int main(int argc, char** argv){
 	while(cv::waitKey(10) != 27){
 		if(bNewMat) {
 			mtx.lock();
-			matThread.convertTo(mat, CV_8U, 255.f / 6000.f);
+			matThread.convertTo(mat, CV_8U, 255.f / 8000.f);
 			mtx.unlock();
 			cv::imshow("win", mat);
 			bNewMat = false;

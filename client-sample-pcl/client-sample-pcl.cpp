@@ -11,6 +11,8 @@ int main(int argc, char** argv){
 
 	pcl::console::parse_argument(argc, argv, "-port", port);
 
+	port = 3345;
+
 	OpenNI2NetClient client(port);
 
 	pcl::visualization::PCLVisualizer viewer("OpenNI2 Stream client PCL");
@@ -33,6 +35,7 @@ int main(int argc, char** argv){
 			mtx.unlock();
 		}
 	});
+
 
 	while (!viewer.wasStopped()) {
 		using namespace std::chrono_literals;

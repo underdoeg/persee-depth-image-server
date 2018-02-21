@@ -78,6 +78,24 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 	auto pixels = static_cast<const openni::DepthPixel*>(ref.getData());
 
 	callback(pixels, width, height);
+
+	if(callbackPcl){
+		if(!cloud) cloud = Grabber::Cloud::Ptr(new Grabber::Cloud());
+
+
+		cloud->resize(width * height);
+
+		for (int v = 0; v < height; ++v) {
+			for (int u = 0; u < width; ++u) {
+				int index = v*width+u;
+				auto& a = cloud->at(index);
+				openni::CoordinateConverter::convertDepthToWorld(in, u, v, pixels[index], &a.x, &a.y, &a.z);
+			}
+		}
+
+		callbackPcl(cloud);
+
+	}
 }
 
 int Grabber::getWidth() {
@@ -94,4 +112,8 @@ OpenNI2SizeType Grabber::getFovX() {
 
 OpenNI2SizeType Grabber::getFovY() {
 	return fovy;
+}
+
+void Grabber::setCallbackPcl(const Grabber::CallbackPcl &c) {
+	callbackPcl = c;
 }
