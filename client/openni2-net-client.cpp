@@ -156,81 +156,86 @@ void OpenNI2NetClient::start() {
 			height = header.height;
 			mtx.unlock();
 
-			cv::Mat mat(header.height, header.width, CV_16UC1);
+			try {
 
-			if (header.jpeg == 0) {
-				memcpy(mat.data, buffer.data(), buffer.size());
-			} else {
-				cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
-			}
+				cv::Mat mat(header.height, header.width, CV_16UC1);
 
-			if (callbackCv) callbackCv(mat);
-			if (callbackPcl) {
+				if (header.jpeg == 0) {
+					memcpy(mat.data, buffer.data(), buffer.size());
+				} else {
+					cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
+				}
+
+				if (callbackCv) callbackCv(mat);
+				if (callbackPcl) {
 
 
+					const uint16_t *depthMap = reinterpret_cast<const uint16_t *>(mat.data);
 
-				const uint16_t *depthMap = reinterpret_cast<const uint16_t *>(mat.data);
+					if (mat.step)
 
-				if(mat.step)
+						//cloud->width = header.width;
+						//cloud->height = header.height;
+						cloud->is_dense = false;
+					cloud->points.resize(header.height * header.width);
 
-				//cloud->width = header.width;
-				//cloud->height = header.height;
-				cloud->is_dense = false;
-				cloud->points.resize(header.height * header.width);
+					float cx = cloud->width / 2.f;  // Center x
+					float cy = cloud->height / 2.f; // Center y
 
-				float cx = cloud->width  / 2.f;  // Center x
-				float cy = cloud->height / 2.f; // Center y
+					ffx = 2.f * std::tan(ffy / 2.f);
+					ffy = 2.f * std::tan(ffx / 2.f);
 
-				ffx = 2.f * std::tan(ffy / 2.f);
-				ffy = 2.f * std::tan(ffx / 2.f);
+					//ffx = 365;
 
-				//ffx = 365;
+					float fx_inv = 1.0f / ffx;
+					float fy_inv = 1.0f / ffy;
 
-				float fx_inv = 1.0f / ffx;
-				float fy_inv = 1.0f / ffy;
+					int depth_idx = 0;
+					float bad_point = std::numeric_limits<float>::quiet_NaN();
 
-				int depth_idx = 0;
-				float bad_point = std::numeric_limits<float>::quiet_NaN();
-
-				for (int v = 0; v < header.height; ++v) {
-					for (int u = 0; u < header.width; ++u, ++depth_idx) {
-						pcl::PointXYZ &pt = cloud->points[depth_idx];
-						auto depth = float(mat.at<uint16_t>(depth_idx));
-						/// @todo Different values for these cases
-						// Check for invalid measurements
-						if (depthMap[depth_idx] == 0) {
+					for (int v = 0; v < header.height; ++v) {
+						for (int u = 0; u < header.width; ++u, ++depth_idx) {
+							pcl::PointXYZ &pt = cloud->points[depth_idx];
+							auto depth = float(mat.at<uint16_t>(depth_idx));
+							/// @todo Different values for these cases
+							// Check for invalid measurements
+							if (depthMap[depth_idx] == 0) {
 //							depthMap[depth_idx] == depth_image->getNoSampleValue () ||
 //							depthMap[depth_idx] == depth_image->getShadowValue ())
-							pt.x = pt.y = pt.z = bad_point;
-						} else {
+								pt.x = pt.y = pt.z = bad_point;
+							} else {
 //							pt.z = depthMap[depth_idx] * 0.001f; // millimeters to meters
 //							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
 //							pt.y = (static_cast<float> (v) - cy) * pt.z * fy_inv;
 
-							float normX = u / float(header.width) - .5f;
-							float normY = v / float(header.height) - .5f;
+								float normX = u / float(header.width) - .5f;
+								float normY = v / float(header.height) - .5f;
 
-							pt.z = depth * .001f;
-							pt.x = normX * depth * ffx * .001f;
-							pt.y = normY * depth * ffy * .001f;
+								pt.z = depth * .001f;
+								pt.x = normX * depth * ffx * .001f;
+								pt.y = normY * depth * ffy * .001f;
 
 //							pt.z = depthMap[depth_idx] * .001f;
 //							pt.x = (u - cx) * pt.z * fx_inv ;
 //							pt.y = (v - cy) * pt.z * fx_inv;
+							}
 						}
 					}
+					//cloud->sensor_origin_.setZero();
+					//cloud->sensor_orientation_.setIdentity();
+
+					callbackPcl(cloud);
 				}
-				//cloud->sensor_origin_.setZero();
-				//cloud->sensor_orientation_.setIdentity();
 
-				callbackPcl(cloud);
+				auto finish = std::chrono::high_resolution_clock::now();
+
+				std::chrono::duration<double> elapsed = finish - start;
+
+				fps = (1.f / elapsed.count()) * 1000;
+
+			}catch(const std::exception& exept){
+				LOGE << exept.what();
 			}
-
-			auto finish = std::chrono::high_resolution_clock::now();
-
-			std::chrono::duration<double> elapsed = finish - start;
-
-			fps = (1.f / elapsed.count()) * 1000;
 		}
 
 		acceptor->close();
