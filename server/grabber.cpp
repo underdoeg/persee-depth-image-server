@@ -79,6 +79,7 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 
 	callback(pixels, width, height);
 
+	/*
 	if(callbackPcl){
 		if(!cloud) cloud = Grabber::Cloud::Ptr(new Grabber::Cloud());
 
@@ -94,8 +95,8 @@ void Grabber::onNewFrame(openni::VideoStream &in) {
 		}
 
 		callbackPcl(cloud);
-
 	}
+	*/
 }
 
 int Grabber::getWidth() {
@@ -114,6 +115,8 @@ OpenNI2SizeType Grabber::getFovY() {
 	return fovy;
 }
 
+/*
 void Grabber::setCallbackPcl(const Grabber::CallbackPcl &c) {
 	callbackPcl = c;
 }
+*/

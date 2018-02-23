@@ -12,7 +12,7 @@
 
 #include "senderAsio.h"
 
-#include <pcl/visualization/cloud_viewer.h>
+//#include <pcl/visualization/cloud_viewer.h>
 //#include "senderGstreamer.h"
 
 int main(int argc, char** argv) {

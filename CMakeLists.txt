@@ -10,7 +10,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gstreamer)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 3 REQUIRED )
 find_package(Boost 1.4 REQUIRED system)
 
@@ -44,12 +43,9 @@ ENDIF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-
 add_library(openni2-net-stream-common common/openni2-net-common.cpp common/openni2-net-common.h common/loguru.hpp)
-target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${GSTMM_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/common ${PCL_INCLUDE_DIRS} )
-target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl ${GSTMM_LIBRARIES} ${PCL_LIBRARIES})
+target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${GSTMM_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/common)
+target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl ${GSTMM_LIBRARIES})
 
 
 ######################################################################################################################
@@ -60,22 +56,32 @@ target_link_libraries(openni2-net-stream-server openni2-net-stream-common OpenNI
 
 ###################################################################################################################
 
+find_package(PCL 1.7)
+
+if(PCL_FOUND)
+
+    link_directories(${PCL_LIBRARY_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
+
+    ######################################################################################################################
+    ## CLIENT
+    add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
+    add_definitions(${PCL_DEFINITIONS})
+    target_include_directories(openni2-net-stream-client PUBLIC ${PCL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/client)
+    target_link_libraries(openni2-net-stream-client PUBLIC openni2-net-stream-common ${PCL_LIBRARIES})
 
 
-######################################################################################################################
-## CLIENT
-add_library(openni2-net-stream-client client/openni2-net-client.cpp client/openni2-net-client.h)
-add_definitions(${PCL_DEFINITIONS})
-target_include_directories(openni2-net-stream-client PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/client)
-target_link_libraries(openni2-net-stream-client PUBLIC openni2-net-stream-common )
+    ######################################################################################################################
+    ## CLIENT SAMPLE
+    add_executable(openni2-net-stream-client-sample client-sample/client-sample.cpp)
+    target_link_libraries(openni2-net-stream-client-sample openni2-net-stream-client)
 
+    ######################################################################################################################
+    ## CLIENT SAMPLE PCL
+    add_executable(openni2-net-stream-client-sample-pcl client-sample-pcl/client-sample-pcl.cpp)
+    target_link_libraries(openni2-net-stream-client-sample-pcl openni2-net-stream-client)
 
-######################################################################################################################
-## CLIENT SAMPLE
-add_executable(openni2-net-stream-client-sample client-sample/client-sample.cpp)
-target_link_libraries(openni2-net-stream-client-sample openni2-net-stream-client)
+else(PCL_FOUND)
+    message("-- PCL not found on this computer, will only build the server application")
+endif(PCL_FOUND)
 
-######################################################################################################################
-## CLIENT SAMPLE PCL
-add_executable(openni2-net-stream-client-sample-pcl client-sample-pcl/client-sample-pcl.cpp)
-target_link_libraries(openni2-net-stream-client-sample-pcl openni2-net-stream-client)
