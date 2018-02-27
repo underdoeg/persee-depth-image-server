@@ -156,9 +156,19 @@ void OpenNI2NetClient::start() {
 			height = header.height;
 			mtx.unlock();
 
+			if(width == 0 || height == 0) {
+				LOGW << "Wrong width or height";
+				continue;
+			}
+
 			try {
 
 				cv::Mat mat(header.height, header.width, CV_16UC1);
+
+				if(buffer.size() != mat.total() * mat.elemSize()){
+					LOGW << "Wrong size";
+					continue;
+				}
 
 				if (header.jpeg == 0) {
 					memcpy(mat.data, buffer.data(), buffer.size());
@@ -166,21 +176,30 @@ void OpenNI2NetClient::start() {
 					cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
 				}
 
+//				for(unsigned int iy=0; iy<80; iy++){
+//					for(unsigned int ix=0; ix<width; ix++){
+//						mat.at<uint16_t>(iy, ix) = 8000;
+//					}
+//				}
+
+
+				if(mat.empty() || !mat.isContinuous()) continue;
+
 				if (callbackCv) callbackCv(mat);
 				if (callbackPcl) {
 
 
-					const uint16_t *depthMap = reinterpret_cast<const uint16_t *>(mat.data);
+					auto* depthMap = reinterpret_cast<const uint16_t *>(mat.data);
 
-					if (mat.step)
+					//if (mat.step)
+					cloud->is_dense = false;
 
-						//cloud->width = header.width;
-						//cloud->height = header.height;
-						cloud->is_dense = false;
 					cloud->points.resize(header.height * header.width);
 
-					float cx = cloud->width / 2.f;  // Center x
-					float cy = cloud->height / 2.f; // Center y
+					float cx = cloud->width / 3.f;  // Center x
+					float cy = cloud->height / 3.f; // Center y
+
+					LOGI << header.width;
 
 					ffx = 2.f * std::tan(ffy / 2.f);
 					ffy = 2.f * std::tan(ffx / 2.f);
@@ -208,12 +227,12 @@ void OpenNI2NetClient::start() {
 //							pt.x = (static_cast<float> (u) - cx) * pt.z * fx_inv;
 //							pt.y = (static_cast<float> (v) - cy) * pt.z * fy_inv;
 
-								float normX = u / float(header.width) - .5f;
-								float normY = v / float(header.height) - .5f;
+								float normX = u / float(header.width);
+								float normY = v / float(header.height);
 
 								pt.z = depth * .001f;
-								pt.x = normX * depth * ffx * .001f;
-								pt.y = normY * depth * ffy * .001f;
+								pt.x = (normX - .5f) * depth * fx_inv * .001f;
+								pt.y = (normY - .5f) * depth * fy_inv * .001f;
 
 //							pt.z = depthMap[depth_idx] * .001f;
 //							pt.x = (u - cx) * pt.z * fx_inv ;
