@@ -156,10 +156,11 @@ void OpenNI2NetClient::start() {
 			height = header.height;
 			mtx.unlock();
 
-			if(width == 0 || height == 0) {
+			if(width != 640 || height != 480) {
 				LOGW << "Wrong width or height";
 				continue;
 			}
+
 
 			try {
 
