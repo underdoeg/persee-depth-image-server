@@ -165,7 +165,7 @@ void OpenNI2NetClient::start() {
 //			}
 
 			zmq::message_t msg;
-			subscriber.recv(&msg, ZMQ_NOBLOCK);
+			subscriber.recv(&msg);
 
 			if(msg.size() == 0){
 				LOGI << "OpenNI Client timeout " << addr;
