@@ -84,6 +84,7 @@ void OpenNI2NetClient::start() {
 		zmq::socket_t subscriber (context, ZMQ_SUB);
 		subscriber.setsockopt(ZMQ_RCVTIMEO, 5000);
 		subscriber.setsockopt(ZMQ_SUBSCRIBE, "");
+		subscriber.setsockopt(ZMQ_CONFLATE, 1);
 
 		std::string addr = "tcp://"+host+":"+std::to_string(port);
 		subscriber.connect(addr.c_str());

@@ -56,7 +56,12 @@ int main(int argc, char** argv) {
 	std::atomic_bool bNewMat;
 	bNewMat = false;
 
+	int frame = 0;
+
 	grabber.setCallback([&](const openni::DepthPixel* pixels, int w, int h){
+
+		frame++;
+		if(frame % 2 == 0) return;
 
 		cv::Mat depthMat(h, w, CV_16UC1);
 		auto size = depthMat.step[0] * depthMat.rows;
