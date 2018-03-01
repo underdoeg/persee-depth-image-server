@@ -8,7 +8,8 @@
 
 
 SenderZMQ::SenderZMQ(int port) : ctx(1), publisher(ctx, ZMQ_PUB) {
-	publisher.bind("tcp://*:"+std::to_string(port));
+	std::string addr = "tcp://*:"+std::to_string(port);
+	publisher.bind(addr.c_str());
 	LOGI << "Start publishing on:" << port;
 }
 
