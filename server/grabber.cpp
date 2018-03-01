@@ -35,21 +35,21 @@ void Grabber::start() {
 	rc = device.open(openni::ANY_DEVICE);
 	if (rc != openni::STATUS_OK) {
 		printf("Couldn't open device\n%s\n", openni::OpenNI::getExtendedError());
-		return;
+		exit(0);
 	}
 
 	if (device.getSensorInfo(openni::SENSOR_DEPTH) != NULL) {
 		rc = stream.create(device, openni::SENSOR_DEPTH);
 		if (rc != openni::STATUS_OK) {
 			printf("Couldn't create depth stream\n%s\n", openni::OpenNI::getExtendedError());
-			return;
+			exit(0);
 		}
 	}
 
 	rc = stream.start();
 	if (rc != openni::STATUS_OK){
 		printf("Couldn't start the depth stream\n%s\n", openni::OpenNI::getExtendedError());
-		return;
+		exit(0);
 	}
 
 	stream.addNewFrameListener(this);

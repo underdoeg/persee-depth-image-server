@@ -46,6 +46,7 @@ void OpenNI2NetClient::stop() {
 //	}
 
 	bKeepRunning = false;
+	LOGI << "Shutdown OpenNI2Client " << port;
 	if (thread.joinable()) thread.join();
 
 }
@@ -106,7 +107,6 @@ void OpenNI2NetClient::start() {
 
 		int counter = 0;
 
-		std::vector<uint8_t> buffer;
 		OpenNI2NetHeader header;
 		boost::system::error_code error;
 
@@ -168,10 +168,6 @@ void OpenNI2NetClient::start() {
 
 			memcpy(&header, msg.data(), sizeof(OpenNI2NetHeader));
 
-			
-
-			continue;
-
 			mtx.lock();
 			fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
 			fy = header.fovy / float(OpenNI2FloatConversion); // Vertcal focal length
@@ -187,20 +183,21 @@ void OpenNI2NetClient::start() {
 				continue;
 			}
 
-
 			try {
 
 				cv::Mat mat(header.height, header.width, CV_16UC1);
 
-				if(buffer.size() != mat.total() * mat.elemSize()){
+
+				if(header.size != mat.total() * mat.elemSize()){
 					LOGW << "Wrong size";
 					continue;
 				}
 
 				if (header.jpeg == 0) {
-					memcpy(mat.data, buffer.data(), buffer.size());
+					memcpy(mat.data, reinterpret_cast<uint8_t*>(msg.data())+sizeof(OpenNI2NetHeader), header.size);
 				} else {
-					cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
+					LOGW << "compressed frames not yet supported";
+					//cv::imdecode(buffer, cv::IMREAD_ANYDEPTH, &mat);
 				}
 
 //				for(unsigned int iy=0; iy<80; iy++){
@@ -282,6 +279,7 @@ void OpenNI2NetClient::start() {
 			}catch(const std::exception& exept){
 				LOGE << exept.what();
 			}
+
 		}
 
 //		acceptor->close();
