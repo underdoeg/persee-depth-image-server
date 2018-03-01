@@ -29,9 +29,11 @@ private:
 	std::thread thread;
 	std::atomic_bool bKeepRunning;
 	unsigned port;
-	std::shared_ptr<boost::asio::io_service> ioService;
-	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
-	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
+	std::string host;
+
+//	std::shared_ptr<boost::asio::io_service> ioService;
+//	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
+//	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 
 	CallbackCv callbackCv;
 	CallbackPcl callbackPcl;
@@ -50,7 +52,7 @@ private:
 	void start();
 
 public:
-	explicit OpenNI2NetClient(unsigned port = OpenNI2ServerDefaultPort);
+	explicit OpenNI2NetClient(const std::string& host = "127.0.0.1", unsigned port = OpenNI2ServerDefaultPort);
 	~OpenNI2NetClient();
 
 	void setCallbackCv(const CallbackCv &callback);

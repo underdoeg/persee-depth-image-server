@@ -14,7 +14,7 @@ void mouseCB(int event, int x, int y, int flags, void *userdata) {
 
 int main(int argc, char **argv) {
 
-	OpenNI2NetClient client(3345);
+	OpenNI2NetClient client("84.84.84.20", 3344);
 
 	cv::namedWindow("win", cv::WINDOW_AUTOSIZE);
 
@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
 		mtx.unlock();
 		bNewMat = true;
 	});
-
 
 	unsigned fpsCounter = 0;
 

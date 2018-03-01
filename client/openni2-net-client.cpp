@@ -4,6 +4,8 @@
 
 #include <chrono>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
+#include <zmq.hpp>
+#include <string>
 
 //#include <pcl/compression/organized_pointcloud_conversion.h>
 
@@ -12,7 +14,7 @@
 //boost::asio::io_service OpenNI2NetClient::ioService;
 //bool OpenNI2NetClient::ioServiceRunning = false;
 
-OpenNI2NetClient::OpenNI2NetClient(unsigned int p) : port(p) {
+OpenNI2NetClient::OpenNI2NetClient(const std::string& h, unsigned int p) : host(h), port(p) {
 	cloud = Cloud::Ptr(new Cloud());
 	start();
 }
@@ -39,10 +41,9 @@ void OpenNI2NetClient::stop() {
 //	acceptor.reset();
 //	socket.reset();
 //	ioService.reset();
-
-	if(ioService){
-		ioService->stop();
-	}
+//	if(ioService){
+//		ioService->stop();
+//	}
 
 	bKeepRunning = false;
 	if (thread.joinable()) thread.join();
@@ -78,20 +79,28 @@ void OpenNI2NetClient::start() {
 		std::condition_variable cv;
 		std::mutex cvMutex;
 
-		ioService = std::make_shared<boost::asio::io_service>();
-		socket = std::make_shared<tcp::socket>(*ioService);
-		acceptor = std::make_shared<tcp::acceptor>(*ioService, tcp::endpoint(tcp::v4(), port));
-		//acceptor->accept(*socket);
+		zmq::context_t context(1);
+		zmq::socket_t subscriber (context, ZMQ_SUB);
+		subscriber.setsockopt(ZMQ_RCVTIMEO, 5000);
+		subscriber.setsockopt(ZMQ_SUBSCRIBE, "");
 
-		LOGI << "Listening for openni data on port " << port;
+		std::string addr = "tcp://"+host+":"+std::to_string(port);
+		subscriber.connect(addr.c_str());
+
+		LOGI << "Subscribing to " << addr;
+
+//		ioService = std::make_shared<boost::asio::io_service>();
+//		socket = std::make_shared<tcp::socket>(*ioService);
+//		acceptor = std::make_shared<tcp::acceptor>(*ioService, tcp::endpoint(tcp::v4(), port));
+//		//acceptor->accept(*socket);
 //
-		std::unique_lock<std::mutex> lk(cvMutex);
-		acceptor->async_accept(*socket, [&](const boost::system::error_code& ec_){
-			ioService->stop();
-		});
-		ioService->run();
-
-		LOGI << "Openni connected on port " << port;
+//		LOGI << "Listening for openni data on port " << port;
+////
+//		std::unique_lock<std::mutex> lk(cvMutex);
+//		acceptor->async_accept(*socket, [&](const boost::system::error_code& ec_){
+//			ioService->stop();
+//		});
+//		ioService->run();
 
 		size_t bufferSize = 0;
 
@@ -107,7 +116,7 @@ void OpenNI2NetClient::start() {
 
 			//size_t amt = 0;
 
-			auto amt = socket->read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), error);
+//			auto amt = socket->read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), error);
 //			socket.async_read_some(boost::asio::buffer(&header, sizeof(OpenNI2NetHeader)), [&](const boost::system::error_code& ec_, size_t _amt){
 //				amt = _amt;
 //				cv.notify_all();
@@ -121,33 +130,47 @@ void OpenNI2NetClient::start() {
 //				continue;
 //			}
 //			LOGI << "LEAVE";
+//
+//			if (amt == 0) {
+//				LOGW << "No data received";
+//				continue;
+//			};
+//
+//			buffer.clear();
+//			buffer.reserve(header.size);
+//
+//			while (bKeepRunning && buffer.size() < header.size) {
+//				std::array<unsigned char, 2048> data;
+//				size_t toRead = data.size();
+//				if (toRead > header.size - buffer.size()) {
+//					toRead = header.size - buffer.size();
+//				}
+//				amt = socket->read_some(boost::asio::buffer(data, toRead), error);
+//
+//				buffer.insert(buffer.end(), data.begin(), data.begin() + amt);
+//			}
+//
+//			if (!bKeepRunning) break;
+//
+//			if (buffer.size() != header.size) {
+//				LOGE << "Wrong buffer size received  " << std::endl;
+//				continue;
+//			}
 
+			zmq::message_t msg;
+			subscriber.recv(&msg);
 
-			if (amt == 0) {
-				LOGW << "No data received";
+			if(msg.size() == 0){
+				LOGI << "OpenNI Client timeout " << addr;
 				continue;
-			};
-
-			buffer.clear();
-			buffer.reserve(header.size);
-
-			while (bKeepRunning && buffer.size() < header.size) {
-				std::array<unsigned char, 2048> data;
-				size_t toRead = data.size();
-				if (toRead > header.size - buffer.size()) {
-					toRead = header.size - buffer.size();
-				}
-				amt = socket->read_some(boost::asio::buffer(data, toRead), error);
-
-				buffer.insert(buffer.end(), data.begin(), data.begin() + amt);
 			}
 
-			if (!bKeepRunning) break;
 
-			if (buffer.size() != header.size) {
-				LOGE << "Wrong buffer size received  " << std::endl;
-				continue;
-			}
+			memcpy(&header, msg.data(), sizeof(OpenNI2NetHeader));
+
+			
+
+			continue;
 
 			mtx.lock();
 			fx = header.fovx / float(OpenNI2FloatConversion); // Horizontal focal length
@@ -261,12 +284,12 @@ void OpenNI2NetClient::start() {
 			}
 		}
 
-		acceptor->close();
-		acceptor.reset();
-		socket->close();
-		socket.reset();
-		ioService->stop();
-		ioService.reset();
+//		acceptor->close();
+//		acceptor.reset();
+//		socket->close();
+//		socket.reset();
+//		ioService->stop();
+//		ioService.reset();
 	});
 }
 

@@ -14,7 +14,7 @@ SenderZMQ::SenderZMQ(int port) : ctx(1), publisher(ctx, ZMQ_PUB) {
 }
 
 void SenderZMQ::send(const cv::Mat &mat) {
-	OpenNI2SizeType sizeToSend = boost::numeric_cast<OpenNI2SizeType>(mat.total() * mat.elemSize());
+	auto sizeToSend = boost::numeric_cast<OpenNI2SizeType>(mat.total() * mat.elemSize());
 
 	// data size
 	OpenNI2NetHeader header = {
@@ -29,7 +29,9 @@ void SenderZMQ::send(const cv::Mat &mat) {
 	zmq::message_t msg(sizeof(OpenNI2NetHeader) + sizeToSend);
 	memcpy(msg.data(), &header, sizeof(OpenNI2NetHeader));
 	memcpy(static_cast<uint8_t*>(msg.data())+sizeof(OpenNI2NetHeader), mat.data, sizeToSend);
-	publisher.send(msg);
+	if(!publisher.send(msg)){
+		LOGI << "Could not send data";
+	}
 }
 
 void SenderZMQ::setFov(OpenNI2SizeType fx, OpenNI2SizeType fy) {

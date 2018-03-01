@@ -4,6 +4,7 @@ project(openni2-net-stream-server)
 # add modules path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gstreamer)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppzmq)
 
 #include(FindPkgConfig)
 #pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
@@ -13,18 +14,6 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(OpenCV 3 REQUIRED )
 find_package(Boost 1.4 REQUIRED system)
 
-find_package(PkgConfig)
-pkg_check_modules(PC_ZeroMQ QUIET zmq)
-find_path(ZeroMQ_INCLUDE_DIR
-        NAMES zmq.hpp
-        PATHS ${PC_ZeroMQ_INCLUDE_DIRS}
-        )
-
-## use the hint from about to find the location of libzmq
-find_library(ZeroMQ_LIBRARY
-        NAMES zmq
-        PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
-        )
 
 ## check if system is ARM, if so app is compiled on persee and needs the included openni2 libs
 IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
@@ -57,8 +46,8 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_library(openni2-net-stream-common common/openni2-net-common.cpp common/openni2-net-common.h common/loguru.hpp)
-target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${GSTMM_INCLUDE_DIRS} ${ZeroMQ_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/common)
-target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl ${GSTMM_LIBRARIES} ${ZeroMQ_LIBRARY})
+target_include_directories(openni2-net-stream-common PUBLIC ${Boost_INCLUDES} ${GSTMM_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/common)
+target_link_libraries(openni2-net-stream-common PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBS} Threads::Threads dl ${GSTMM_LIBRARIES} cppzmq)
 
 
 ######################################################################################################################
