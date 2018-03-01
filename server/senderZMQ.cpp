@@ -8,7 +8,7 @@
 
 
 SenderZMQ::SenderZMQ(int port) : ctx(1), publisher(ctx, ZMQ_PUB) {
-	std::string addr = "tcp://*:"+std::to_string(port);
+	addr = "tcp://*:"+std::to_string(port);
 	publisher.bind(addr.c_str());
 	LOGI << "Start publishing on:" << port;
 }
@@ -37,4 +37,10 @@ void SenderZMQ::send(const cv::Mat &mat) {
 void SenderZMQ::setFov(OpenNI2SizeType fx, OpenNI2SizeType fy) {
 	fovx = fx;
 	fovy = fy;
+}
+
+SenderZMQ::~SenderZMQ() {
+	LOGI << "Close Sender";
+	publisher.unbind(addr.c_str());
+	ctx.close();
 }

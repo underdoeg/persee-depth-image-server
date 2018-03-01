@@ -80,17 +80,6 @@ void OpenNI2NetClient::start() {
 		std::condition_variable cv;
 		std::mutex cvMutex;
 
-		zmq::context_t context(1);
-		zmq::socket_t subscriber (context, ZMQ_SUB);
-		subscriber.setsockopt(ZMQ_RCVTIMEO, 5000);
-		subscriber.setsockopt(ZMQ_SUBSCRIBE, "");
-		subscriber.setsockopt(ZMQ_CONFLATE, 1);
-
-		std::string addr = "tcp://"+host+":"+std::to_string(port);
-		subscriber.connect(addr.c_str());
-
-		LOGI << "Subscribing to " << addr;
-
 //		ioService = std::make_shared<boost::asio::io_service>();
 //		socket = std::make_shared<tcp::socket>(*ioService);
 //		acceptor = std::make_shared<tcp::acceptor>(*ioService, tcp::endpoint(tcp::v4(), port));
@@ -111,8 +100,25 @@ void OpenNI2NetClient::start() {
 		OpenNI2NetHeader header;
 		boost::system::error_code error;
 
+		bool bReconnect = true;
+
+		zmq::context_t context(1);
+		zmq::socket_t subscriber(context, ZMQ_SUB);
+		subscriber.setsockopt(ZMQ_RCVTIMEO, 5000);
+		subscriber.setsockopt(ZMQ_SUBSCRIBE, "");
+		subscriber.setsockopt(ZMQ_CONFLATE, 1);
+
+		std::string addr = "tcp://" + host + ":" + std::to_string(port);
+
+		LOGI << "Subscribing to " << addr;
+
+		subscriber.connect(addr.c_str());
+
 		//
 		while (bKeepRunning) {
+			if(bReconnect) {}
+
+
 			auto start = std::chrono::high_resolution_clock::now();
 
 			//size_t amt = 0;
@@ -159,7 +165,7 @@ void OpenNI2NetClient::start() {
 //			}
 
 			zmq::message_t msg;
-			subscriber.recv(&msg);
+			subscriber.recv(&msg, ZMQ_NOBLOCK);
 
 			if(msg.size() == 0){
 				LOGI << "OpenNI Client timeout " << addr;

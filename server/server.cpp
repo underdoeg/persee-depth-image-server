@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
 	}
 
 	Grabber grabber;
+	grabber.start();
 
 	//SenderGstreamer sender(host, port);
 
@@ -101,7 +102,7 @@ int main(int argc, char** argv) {
 	}
 */
 
-	grabber.start();
+
 
 	while(cv::waitKey(10) != 27){
 		if(bNewMat) {

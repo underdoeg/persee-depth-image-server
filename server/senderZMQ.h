@@ -14,8 +14,11 @@ class SenderZMQ: public Sender{
 
 	OpenNI2SizeType fovx, fovy;
 
+	std::string addr;
+
 public:
 	explicit SenderZMQ(int port=OpenNI2ServerDefaultPort);
+	~SenderZMQ();
 
 	void send(const cv::Mat& mat) override;
 	void setFov(OpenNI2SizeType fx, OpenNI2SizeType fy) override;
