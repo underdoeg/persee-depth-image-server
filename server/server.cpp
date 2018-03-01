@@ -10,10 +10,11 @@
 
 #include "grabber.h"
 
-#include "senderAsio.h"
-
+//#include "senderAsio.h"
 //#include <pcl/visualization/cloud_viewer.h>
 //#include "senderGstreamer.h"
+
+#include "senderZMQ.h"
 
 int main(int argc, char** argv) {
 
@@ -39,9 +40,13 @@ int main(int argc, char** argv) {
 
 	//SenderGstreamer sender(host, port);
 
-	SenderAsio sender(host, port);
-	sender.setCompressed(compressed);
-	sender.setCompressionQuality(compressionQuality);
+//	SenderAsio sender(host, port);
+//	sender.setCompressed(compressed);
+//	sender.setCompressionQuality(compressionQuality);
+
+	LOGI << "host and compression is ignored with zeromq sender which is enabled by default";
+
+	SenderZMQ sender(port);
 
 	const std::string windowName = "OpenNI2 Net Server";
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
@@ -57,14 +62,16 @@ int main(int argc, char** argv) {
 		auto size = depthMat.step[0] * depthMat.rows;
 		memcpy(depthMat.data, pixels, size);
 
+		sender.setFov(grabber.getFovX(), grabber.getFovY());
+		sender.send(depthMat);
+
 		mtx.lock();
 		depthMat.copyTo(matThread);
 		mtx.unlock();
 
 		bNewMat = true;
 
-		sender.setFov(grabber.getFovX(), grabber.getFovY());
-		sender.send(depthMat);
+
 	});
 
 /*

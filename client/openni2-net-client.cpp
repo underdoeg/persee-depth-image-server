@@ -123,7 +123,10 @@ void OpenNI2NetClient::start() {
 //			LOGI << "LEAVE";
 
 
-			if (amt == 0) { continue; };
+			if (amt == 0) {
+				LOGW << "No data received";
+				continue;
+			};
 
 			buffer.clear();
 			buffer.reserve(header.size);
