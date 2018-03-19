@@ -248,8 +248,6 @@ void OpenNI2NetClient::start() {
 					float cx = cloud->width / 3.f;  // Center x
 					float cy = cloud->height / 3.f; // Center y
 
-					LOGI << header.width;
-
 					ffx = 2.f * std::tan(ffy / 2.f);
 					ffy = 2.f * std::tan(ffx / 2.f);
 
