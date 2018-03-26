@@ -14,7 +14,7 @@ void mouseCB(int event, int x, int y, int flags, void *userdata) {
 
 int main(int argc, char **argv) {
 
-	OpenNI2NetClient client("84.84.84.20", 3344);
+	OpenNI2NetClient client("84.84.84.151", 3344);
 
 	cv::namedWindow("win", cv::WINDOW_AUTOSIZE);
 

@@ -8,12 +8,12 @@
 int main(int argc, char** argv){
 
 	unsigned port = OpenNI2ServerDefaultPort;
+	std::string host = "";
 
+	pcl::console::parse_argument(argc, argv, "-host", host);
 	pcl::console::parse_argument(argc, argv, "-port", port);
 
-	port = 3345;
-
-	OpenNI2NetClient client(port);
+	OpenNI2NetClient client(host, port);
 
 	pcl::visualization::PCLVisualizer viewer("OpenNI2 Stream client PCL");
 
