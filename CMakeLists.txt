@@ -11,7 +11,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppzmq)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(OpenCV 3 REQUIRED )
+find_package(OpenCV REQUIRED )
 find_package(Boost 1.4 REQUIRED system)
 
 
