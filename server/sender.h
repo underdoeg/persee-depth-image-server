@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv/cv.hpp>
+#include <opencv2/opencv.hpp>
 #include <openni2-net-common.h>
 
 
